@@ -3,6 +3,7 @@
 
 Yra galimybė nuskaityti duomenis iš failo arba įvesti juos ranka
 
+
 Algoritmo pseudokodas:
 
 iš pradžių kiekvienas simbolis paverčiamas į dvejetainį pavidalą
