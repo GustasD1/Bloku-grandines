@@ -1,9 +1,10 @@
-#include <iostream>
+﻿#include <iostream>
 #include <sstream>
 #include <bitset>
 #include <vector>
 #include <iomanip>
 #include <cstring>
+#include <fstream>
 
 using namespace std;
 
@@ -24,13 +25,26 @@ void binary(string zodis, vector<unsigned long> & reiksmes);
 void didinimas(vector<unsigned long> & reiksmes);
 void rusiavimas(vector<unsigned long> & reiksmes);
 void hashavimas(vector<unsigned long>& reiksmes);
-string show_as_hex(unsigned long input);
+string hexas(unsigned long reiksme);
 
 int main() {
 	vector <unsigned long> reiksmes;
 	string zodis;
-	cout << "iveskite zodi" << endl;
-	cin >> zodis;
+	int sk;
+	string failas;
+	cout << "Pasirinkite ar norite skaityti is failo ar ivesti teksta ranka || is failo - 1 || ivedimas ranka - 2" << endl;
+	cin >> sk;
+	if (sk == 1) {
+		cout << "iveskite failo pavadinima be .txt" << endl;
+		cin >> failas;
+		ifstream fd(failas+".txt");
+		getline(fd, zodis);	
+	}
+	if (sk == 2) {
+		cout << "iveskite eilute" << endl;
+		cin >> zodis;
+	}
+
 	binary(zodis, reiksmes);
 	didinimas(reiksmes);
 	rusiavimas(reiksmes);
@@ -57,7 +71,7 @@ void didinimas(vector<unsigned long> & reiksmes) {
 	for (int i = 0; i < k / 8; i++) {
 		reiksmes.push_back(0x00000000);
 	}
-	bitset<64> block(1);
+	bitset<64> block(sk);
 	string block_string = block.to_string();
 
 	bitset<8> temp(block_string.substr(0, 8));
@@ -67,6 +81,10 @@ void didinimas(vector<unsigned long> & reiksmes) {
 		reiksmes.push_back(temp2.to_ulong());
 
 	}
+
+
+
+
 	
 
 
@@ -78,14 +96,16 @@ void rusiavimas(vector<unsigned long> & reiksmes) {
 	for (int i = 0; i < 64; i=i + 4) {
 		bitset<32> laik(0);
 
-		laik = (unsigned long)reiksmes[i] << 24;
+		laik = (unsigned long) reiksmes[i] << 24;
 		laik |= (unsigned long) reiksmes[i + 1] << 16;
-		laik |= (unsigned long) reiksmes[i+2] << 8;
+		laik |= (unsigned long) reiksmes[i + 2] << 8;
 		laik |= (unsigned long) reiksmes[i + 3];
 		temp[i / 4] = laik.to_ulong();
 	}
+
 	
 reiksmes = temp;
+
 }
 void hashavimas(vector<unsigned long>& reiksmes) {
 	unsigned long E[64] = {
@@ -101,7 +121,7 @@ void hashavimas(vector<unsigned long>& reiksmes) {
 		0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,
 		0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
 	};
- 
+
 	unsigned long static H0 = 0x6a09e667;
 	unsigned long static H1 = 0xbb67ae85;
 	unsigned long static H2 = 0x3c6ef372;
@@ -123,28 +143,29 @@ void hashavimas(vector<unsigned long>& reiksmes) {
 
 	unsigned long laik1;
 	unsigned long laik2;
-		unsigned long a=H0;
-		unsigned long b=H1;
-		unsigned long c=H2;
-		unsigned long d=H3;
-		unsigned long e = H4;
-			unsigned long f = H5;
-			unsigned long g = H6;
-			unsigned long h = H7;
+	unsigned long a = H0;
+	unsigned long b = H1;
+	unsigned long c = H2;
+	unsigned long d = H3;
+	unsigned long e = H4;
+	unsigned long f = H5;
+	unsigned long g = H6;
+	unsigned long h = H7;
 
 
-			for (int i = 0; i < 64; i++) {
-				laik1 = h + EP1(e) + CH(e, f, g) + E[i] + S[i];
+	for (int i = 0; i < 64; i++) {
+		laik1 = h + EP1(e) + CH(e, f, g) + E[i] + S[i];
+	
+	laik2 = EP0(a) + MAJ(a, b, c);
+	h = g;
+	g = f;
+	f = e;
+	e = (d + laik1) & 0xFFFFFFFF;
+	d = c;
+	c = b;
+	b = a;
+	a = (laik1 + laik2) & 0xFFFFFFFF;
 }
-			laik2 = EP0(a) + MAJ(a, b, c);
-			h = g;
-			g = f;
-			f = e;
-			e = (d+laik1) & 0xFFFFFFFF;
-			d = c;
-			c = b;
-			b = a;
-			a = (laik1+laik2) & 0xFFFFFFFF;
 			H0=(H0+a) & 0xFFFFFFFF;
 			H1 = (H1 + b) & 0xFFFFFFFF;
 			H2 = (H2 + c) & 0xFFFFFFFF;
@@ -154,20 +175,19 @@ void hashavimas(vector<unsigned long>& reiksmes) {
 			H6 = (H6 + g) & 0xFFFFFFFF;
 			H7 = (H7 + h) & 0xFFFFFFFF;
 
-		cout<< show_as_hex(H0) + show_as_hex(H1) + show_as_hex(H2) +
-				show_as_hex(H3) + show_as_hex(H4) + show_as_hex(H5) +
-				show_as_hex(H6) + show_as_hex(H7)<<endl;
+		cout<< hexas(H0) + hexas(H1) + hexas(H2) + hexas(H3) + hexas(H4) + hexas(H5) + hexas(H6) + hexas(H7)<<endl;
 
 }
-string show_as_hex(unsigned long input)
+string hexas(unsigned long reiksme)
 {
-	bitset<32> bs(input);
+
+	bitset<32> bs(reiksme);
 	unsigned n = bs.to_ulong();
 
 	stringstream sstream;
 	sstream << std::hex << std::setw(8) << std::setfill('0') << n;
-	string temp;
-	sstream >> temp;
+	string laik;
+	sstream >> laik;
 
-	return temp;
+	return laik;
 }
